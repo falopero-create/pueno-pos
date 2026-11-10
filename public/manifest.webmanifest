@@ -1,0 +1,18 @@
+{
+  "name": "Pueno Punto de Venta",
+  "short_name": "Pueno POS",
+  "description": "Punto de venta web/PWA — caja, productos y turnos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e7f1ec",
+  "theme_color": "#0f6b5c",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
