@@ -1,4 +1,4 @@
--- Seed demo: admin/admin, cajero, supervisor, productos, cliente público
+-- Catalog seed (no user credentials). First admin is created via /setup or ADMIN_PASSWORD env.
 
 INSERT INTO empresa (uuid_empresa, nombre_empresa, pais, cp, email_empresa, giro_comercial)
 VALUES ('emp-matriz-001', 'Comercio Demo Pueno', 'México', '06600', 'demo@pueno.local', 'Abarrotes / Miscelánea')
@@ -14,14 +14,6 @@ INSERT INTO c_tipo_usuario (idc_tipo_usuario, descripcion) VALUES
   (3, 'Cajero'),
   (4, 'Consulta')
 ON CONFLICT (idc_tipo_usuario) DO NOTHING;
-
--- password: admin  (bcrypt cost 10)
-INSERT INTO usuario (uuid_usuario, uuid_sucursal, idtipo_usuario, username, password_hash, email, nombre, role, privilegios)
-VALUES
-  ('usr-admin-001', 'suc-matriz-001', 1, 'admin', '$2b$10$Xdlea9I8fkUO2bwbSxaaFe5BGC8Y9xvQ5QGRcQmUBlTMkPnQzjcyS', 'admin@demo.local', 'ADMINISTRADOR', 'admin', 'vender,descontar,cortar,inventario,usuarios,reportes,config'),
-  ('usr-super-001', 'suc-matriz-001', 2, 'supervisor', '$2b$10$Xdlea9I8fkUO2bwbSxaaFe5BGC8Y9xvQ5QGRcQmUBlTMkPnQzjcyS', 'super@demo.local', 'SUPERVISOR DEMO', 'supervisor', 'vender,descontar,cortar,inventario,reportes'),
-  ('usr-caja-001', 'suc-matriz-001', 3, 'cajero', '$2b$10$Xdlea9I8fkUO2bwbSxaaFe5BGC8Y9xvQ5QGRcQmUBlTMkPnQzjcyS', 'cajero@demo.local', 'CAJERO DEMO', 'cajero', 'vender')
-ON CONFLICT (uuid_usuario) DO NOTHING;
 
 INSERT INTO caja (uuid_caja, uuid_sucursal, clavecaja)
 VALUES ('caja-prin-001', 'suc-matriz-001', 'PRINCIPAL / DPTO. GENERAL')

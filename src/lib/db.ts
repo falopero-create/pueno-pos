@@ -46,12 +46,80 @@ async function startLocal(): Promise<PGlite> {
   );
   const migrationsDir = path.join(process.cwd(), "migrations");
   const files = (await readdir(migrationsDir).catch(() => []))
-    .filter((f) => f.endsWith(".sql"))
+    .filter((f) => f.endsWith(".sql") && !f.includes(".dev."))
     .sort();
   for (const file of files) {
     if (done.has(file)) continue;
     await db.exec(await readFile(path.join(migrationsDir, file), "utf8"));
     await db.query(`INSERT INTO schema_migrations (name) VALUES ($1)`, [file]);
   }
+  // Local-only optional demo users: require ALLOW_DEMO_SEED=1 and DEMO_PASSWORD
+  // from the environment (never hardcoded). Skipped when DATABASE_URL is set.
+  await maybeSeedLocalDemo(db);
   return db;
+}
+
+async function maybeSeedLocalDemo(db: PGlite): Promise<void> {
+  if (process.env.ALLOW_DEMO_SEED?.trim() !== "1") return;
+  const demoPassword = process.env.DEMO_PASSWORD?.trim() ?? "";
+  if (demoPassword === "") return;
+  const count = await db.query<{ n: number }>(
+    `SELECT COUNT(*)::int AS n FROM usuario`,
+  );
+  if (Number(count.rows[0]?.n ?? 0) > 0) return;
+
+  const bcrypt = (await import("bcryptjs")).default;
+  const hash = await bcrypt.hash(demoPassword, 12);
+  const suc = await db.query<{ uuid_sucursal: string }>(
+    `SELECT uuid_sucursal FROM sucursal ORDER BY id ASC LIMIT 1`,
+  );
+  const uuidSucursal = suc.rows[0]?.uuid_sucursal;
+  if (!uuidSucursal) return;
+
+  const users = [
+    {
+      uuid: "usr-admin-001",
+      username: "admin",
+      role: "admin",
+      tipo: 1,
+      nombre: "ADMINISTRADOR",
+      priv: "vender,descontar,cortar,inventario,usuarios,reportes,config",
+    },
+    {
+      uuid: "usr-super-001",
+      username: "supervisor",
+      role: "supervisor",
+      tipo: 2,
+      nombre: "SUPERVISOR",
+      priv: "vender,descontar,cortar,inventario,reportes",
+    },
+    {
+      uuid: "usr-caja-001",
+      username: "cajero",
+      role: "cajero",
+      tipo: 3,
+      nombre: "CAJERO",
+      priv: "vender",
+    },
+  ];
+  for (const u of users) {
+    await db.query(
+      `INSERT INTO usuario (
+         uuid_usuario, uuid_sucursal, idtipo_usuario, username, password_hash,
+         email, nombre, role, privilegios
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       ON CONFLICT (uuid_usuario) DO NOTHING`,
+      [
+        u.uuid,
+        uuidSucursal,
+        u.tipo,
+        u.username,
+        hash,
+        `${u.username}@local`,
+        u.nombre,
+        u.role,
+        u.priv,
+      ],
+    );
+  }
 }

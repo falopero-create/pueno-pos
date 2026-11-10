@@ -9,9 +9,9 @@ npm install
 npm run dev
 ```
 
-Abrí http://127.0.0.1:3000 — credenciales demo: `admin` / `admin` (también `supervisor` y `cajero`).
+Abrí http://127.0.0.1:3000. Si no hay usuarios, `/setup` crea el administrador inicial (la contraseña se elige ahí; no se embebe en el código).
 
-Sin `DATABASE_URL` usa PGlite en memoria con migraciones + seed. Con `DATABASE_URL` (publish-app) usa Postgres.
+Sin `DATABASE_URL` usa PGlite local con migraciones + catálogo. Con `DATABASE_URL` (publish-app) usa Postgres. En build, podés pasar `ADMIN_PASSWORD` (y opcional `ADMIN_USERNAME`) para crear el primer admin vía migrate.
 
 ## Stack
 

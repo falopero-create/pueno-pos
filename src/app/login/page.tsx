@@ -1,14 +1,32 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [needsSetup, setNeedsSetup] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/setup");
+        const data = await res.json();
+        if (!cancelled) setNeedsSetup(Boolean(data.needsSetup));
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -48,6 +66,13 @@ export default function LoginPage() {
 
         {error ? <div className="error-banner">{error}</div> : null}
 
+        {needsSetup ? (
+          <div className="placeholder-note">
+            Todavía no hay usuarios.{" "}
+            <Link href="/setup">Creá el administrador inicial</Link>.
+          </div>
+        ) : null}
+
         <div className="field">
           <label htmlFor="username">Usuario</label>
           <input
@@ -73,11 +98,6 @@ export default function LoginPage() {
         <button className="primary-btn" type="submit" disabled={busy}>
           {busy ? "Entrando…" : "Entrar"}
         </button>
-
-        <p className="muted" style={{ fontSize: "0.85rem" }}>
-          Demo: <strong>admin / admin</strong> · también supervisor / cajero
-          (misma clave)
-        </p>
       </form>
     </div>
   );
